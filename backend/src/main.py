@@ -1,6 +1,6 @@
 from fastapi import FastAPI
+from .routers import Contatos
 
-from backend.routers import Contatos
 
 app = FastAPI()
 
