@@ -1,1 +1,1 @@
-from .Contatos import ContatoCreate
+from .Contatos import Contato
