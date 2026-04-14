@@ -1,0 +1,85 @@
+O FastAPI é um dos frameworks mais bem projetados que existem. Algumas coisas que você vai descobrir conforme avançar e vai amar também:
+Validação automática
+Se o usuário mandar um numero como string em vez de int, o FastAPI já rejeita automaticamente com uma mensagem de erro clara — tudo por conta do Pydantic que você já está usando.
+Documentação automática
+O Swagger que você vai abrir no /docs é gerado automaticamente a partir do seu código. Você não escreve documentação — ela aparece sozinha conforme você cria as rotas.
+Async nativo
+Quando você avançar, o FastAPI suporta programação assíncrona nativamente — ideal pra APIs que fazem muitas requisições simultâneas.
+É muito usado no mercado
+Especialmente em empresas que usam Python no backend — fintechs, startups de dados, empresas de ML. É uma skill muito valorizada junto com o que você já sabe.
+
+
+#o que é a biblioteca pydantic
+
+Boa pergunta! Você já está usando ela sem perceber — é o BaseModel do seu schemas/Contatos.py.
+
+O que é Pydantic?
+É uma biblioteca de validação de dados. Você define como os dados devem ser, e ela garante que os dados que chegam estão no formato certo.
+
+Sem Pydantic — você teria que validar na mão:
+python@router.post("/")
+def create_contato(contato: dict):
+    # teria que checar tudo manualmente
+    if "nome" not in contato:
+        return {"error": "nome é obrigatório"}
+    if not isinstance(contato["nome"], str):
+        return {"error": "nome deve ser string"}
+    if "numero" not in contato:
+        return {"error": "numero é obrigatório"}
+    # ... e assim por diante
+Com Pydantic — você só define o modelo:
+pythonclass Contato(BaseModel):
+    nome: str
+    numero: int
+    email: str
+    completed: bool = False
+E o FastAPI + Pydantic fazem o resto automaticamente. Se o usuário mandar isso:
+json{
+    "nome": 123,
+    "email": "ana@gmail.com"
+}
+O Pydantic já rejeita com uma mensagem clara:
+
+nome deve ser string, não int
+numero está faltando
+
+
+Pydantic também converte tipos automaticamente:
+python# usuário manda:
+{"numero": "99999999"}  # string
+
+# Pydantic converte pra int automaticamente
+# porque você declarou numero: int
+
+Resumindo:
+Pydantic = validação + conversão + documentação automática
+É uma das razões do FastAPI ser tão produtivo — você define o modelo uma vez e ganha validação, conversão e documentação de graça. Por isso o FastAPI e o Pydantic são praticamente inseparáveis.
+
+
+
+#porquue eu tenho que criar um ambiente virtual....
+
+
+O ambiente virtual isola as dependências do projeto. Cada projeto tem sua própria "caixinha" de bibliotecas, evitando conflito entre versões. Por exemplo:
+Projeto A → FastAPI 0.95
+Projeto B → FastAPI 0.110
+Sem o .venv os dois brigariam pela mesma instalação global.
+
+
+##o que tenho que rever: 
+
+No FastAPI:
+
+Tratamento de erros com HTTPException
+Middlewares (CORS — essencial quando conectar o React)
+Autenticação com JWT
+
+No banco:
+
+Relacionamentos entre tabelas (ForeignKey)
+Migrations com Alembic — pra alterar tabelas sem perder dados
+
+No projeto em geral:
+
+Variáveis de ambiente no .env — você já fez isso
+.gitignore pro .env — importante! Você não quer subir senha do banco pro GitHub

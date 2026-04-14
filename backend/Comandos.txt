@@ -1,0 +1,2 @@
+ativação do ambiente virtual: .venv\Scripts\activate
+iniciar back: python -m uvicorn src.main:app --reload
