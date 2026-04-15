@@ -1,6 +1,9 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from src.database import Base
 
+# representa o banco de dados
+# É a estrutura da tabela no banco. O SQLAlchemy usa isso pra criar e manipular as linhas do banco. É o "espelho" da sua tabela SQL. 
+
 class Contato(Base):
     __tablename__ = "contatos"
 

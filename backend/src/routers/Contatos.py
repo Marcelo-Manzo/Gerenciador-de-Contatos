@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 # o session instancia a conexão com o banco e o sqlarchemi traduz os comandos do python para sql
 
+
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.schemas.Contatos import Contato
@@ -10,6 +11,9 @@ router = APIRouter(prefix="/Contatos", tags=["Contatos"])
 
 
 # . O ORM (Object Relational Mapper) traduz código Python para SQL automaticamente. Você escreve Python, ele escreve o SQL por baixo:
+
+
+# Sem Depends — trabalhoso e perigoso(ele pode não encerrar após dar algum erro)
 
 @router.get("/")
 def get_contatos(db: Session = Depends(get_db)):
