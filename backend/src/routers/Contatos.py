@@ -63,7 +63,16 @@ def update_contato(id: int, contato: Contato, db: Session = Depends(get_db)):
 def delete_contato(id: int, contato : Contato, db: Session = Depends(get_db)):
     contato = db.query(model.Contato).filter(model.Contato.id == id).first()
     db.delete(contato)
+    if contato is None:
+        raise HTTPException(status_code=404, detail=f"Contato {id} não encontrado")
     #perguntar pq eu dou um commit no final de cada metodo
+    # Duas ótimas perguntas!
+
+# 1. Por que dar db.commit() no final?
+# A Session do SQLAlchemy funciona como um "rascunho". Tudo que você faz fica em memória até o commit — só aí vai pro banco de verdade:
+# pythondb.delete(contato)  # ← marca pra deletar (só em memória)
+# db.commit()         # ← executa no banco de verdade
+
     db.commit()
     return {"message": f"contato {id} deletado"}
 
