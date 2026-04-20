@@ -9,6 +9,6 @@ class Contato(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
-    numero = Column(Integer, nullable=False)
+    numero = Column(String(20), nullable=False)
     email = Column(String(100), nullable=False)
     completed = Column(Boolean, default=False)
