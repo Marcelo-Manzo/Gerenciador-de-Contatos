@@ -1,0 +1,96 @@
+não entendi muito bem o pq dentro das rotas é usado o model e o schema, eu sei que um valida com o pydantic os dados da api, e o outro ´cria´ as tabelas no banco de dados, mas não entendi mmuito bem como eles são usados nessas pastas
+
+15:27
+Claude respondeu: Boa dúvida!
+Boa dúvida! Vou mostrar o fluxo visual primeiro e depois explicar:
+
+JSON chega na API
+      ↓
+  [SCHEMA]         ← Pydantic valida se os dados estão corretos
+      ↓
+  [MODEL]          ← SQLAlchemy converte pra linha do banco
+      ↓
+  [BANCO]          ← dado salvo na tabela
+Schema — porteiro da API
+
+O schema é a primeira coisa que toca o dado. Ele decide se o JSON que chegou é válido ou não:
+
+python
+# O usuário manda isso:
+{
+    "nome": "Marcelo",
+    "numero": "11999999999",
+    "email": "marcelo@gmail.com",
+    "completed": false
+}
+
+# O schema valida:
+class Contato(BaseModel):
+    nome: str        # ✓ é string
+    numero: str      # ✓ é string
+    email: str       # ✓ é string
+    completed: bool  # ✓ é bool
+Se o usuário mandar numero: 123 sendo que deveria ser string, o Pydantic já rejeita antes de chegar no banco. O schema não sabe nada do banco — ele só valida o JSON.
+
+Model — representação da tabela
+
+O model só entra em cena depois que o schema validou. Ele é o objeto que o SQLAlchemy usa pra falar com o banco:
+
+python
+class Contato(Base):
+    __tablename__ = "contatos"
+    id = Column(Integer, primary_key=True)  # ← coluna do banco
+    nome = Column(String(100))               # ← coluna do banco
+    numero = Column(String(20))              # ← coluna do banco
+    email = Column(String(100))              # ← coluna do banco
+    completed = Column(Boolean)              # ← coluna do banco
+O model não valida nada — ele só mapeia colunas do banco pra atributos Python.
+
+Como os dois se encontram no POST:
+
+python
+@router.post("/")
+def create_contato(contato: Contato, db: Session = Depends(get_db)):
+    #                ↑
+    #           SCHEMA entra aqui
+    #           Pydantic já validou o JSON
+    #           "contato" é um objeto Python com os dados validados
+
+    novo = model.Contato(**contato.dict())
+    #      ↑
+    #      MODEL entra aqui
+    #      converte os dados validados numa linha do banco
+    #      equivalente a: INSERT INTO contatos ...
+
+    db.add(novo)
+    db.commit()
+    return novo
+Pensa assim:
+
+Schema = formulário de entrada — garante que os dados estão no formato certo
+Model = ficha no banco — representa como o dado fica armazenado
+Por que separar os dois?
+
+Porque nem sempre o que entra é igual ao que está no banco. Por exemplo:
+
+python
+# Schema de criação — sem id (o banco gera)
+class ContatoCreate(BaseModel):
+    nome: str
+    numero: str
+    email: str
+
+# Schema de resposta — com id (retorna pro usuário)
+class ContatoResponse(BaseModel):
+    id: int
+    nome: str
+    numero: str
+    email: str
+
+# Model — como está no banco
+class Contato(Base):
+    id = Column(Integer, primary_key=True)
+    nome = Column(String(100))
+    numero = Column(String(20))
+    email = Column(String(100))
+O id existe no banco e na resposta, mas não na criação. Se você usasse o model direto na rota, o usuário poderia mandar qualquer id e sobrescrever dados no banco — seria uma falha de segurança.

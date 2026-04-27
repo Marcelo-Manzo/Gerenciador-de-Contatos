@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 # o session instancia a conexão com o banco e o sqlarchemi traduz os comandos do python para sql
-
 
 from sqlalchemy.orm import Session
 from src.database import get_db
-from src.schemas.Contatos import Contato
+from src.schemas.Contatos import ContatoCreate, ContatoResponse
 from src.models import Contatos as model
+from typing import List
 
 router = APIRouter(prefix="/Contatos", tags=["Contatos"])
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/Contatos", tags=["Contatos"])
 
 # Sem Depends — trabalhoso e perigoso(ele pode não encerrar após dar algum erro)
 
-@router.get("/")
+@router.get("/", response_model=List[ContatoResponse])
 def get_contatos(db: Session = Depends(get_db)):
     contatos = db.query(model.Contato).all()
     return contatos
@@ -26,10 +26,12 @@ def get_contatos(db: Session = Depends(get_db)):
 # SELECT * FROM contatos;
 
 #esse {id} é a forma de receber o id pela rota
-@router.get("/{id}")
+@router.get("/{id}", response_model=ContatoResponse)
 def get_contato(id: int, db: Session = Depends(get_db)):
             # busca(Contato(modelo))    filtra pelo id           pega o primeiro
     contato = db.query(model.Contato).filter(model.Contato.id == id).first()
+    if contato is None:
+        raise HTTPException(status_code=404, detail=f"Contato {id} não encontrado")
     return contato
 # # Você escreve isso:
 # db.query(model.Contato).filter(model.Contato.id == id).first()
@@ -38,9 +40,19 @@ def get_contato(id: int, db: Session = Depends(get_db)):
 # SELECT * FROM contatos WHERE id = 1 LIMIT 1;
 
 
-@router.post("/")
-def create_contato(contato: Contato, db: Session = Depends(get_db)):
+@router.post("/", response_model=ContatoResponse)
+def create_contato(contato: ContatoCreate, db: Session = Depends(get_db)):
+    #                ↑
+    #           SCHEMA entra aqui
+    #           Pydantic valida o JSON
+    #           "contato" é um objeto Python com os dados validados
+
     novo = model.Contato(**contato.dict())
+    #      ↑
+    #      MODEL entra aqui
+    #      converte os dados validados numa linha do banco
+    #      equivalente a: INSERT INTO contatos ...
+
     db.add(novo)
     db.commit()
     db.refresh(novo)
@@ -52,9 +64,11 @@ def create_contato(contato: Contato, db: Session = Depends(get_db)):
 # # O SQLAlchemy executa isso:
 # INSERT INTO contatos (nome, numero, email, completed) VALUES (...);
 
-@router.put("/{id}")
-def update_contato(id: int, contato: Contato, db: Session = Depends(get_db)):
+@router.put("/{id}", response_model=ContatoResponse)
+def update_contato(id: int, contato: ContatoCreate, db: Session = Depends(get_db)):
     existente = db.query(model.Contato).filter(model.Contato.id == id).first()
+    if existente is None:
+        raise HTTPException(status_code=404, detail=f"Contato {id} não encontrado")
     existente.nome = contato.nome
     existente.numero = contato.numero
     existente.email = contato.email
@@ -64,11 +78,11 @@ def update_contato(id: int, contato: Contato, db: Session = Depends(get_db)):
     return existente
 
 @router.delete("/{id}")
-def delete_contato(id: int, contato : Contato, db: Session = Depends(get_db)):
+def delete_contato(id: int, db: Session = Depends(get_db)):
     contato = db.query(model.Contato).filter(model.Contato.id == id).first()
-    db.delete(contato)
     if contato is None:
         raise HTTPException(status_code=404, detail=f"Contato {id} não encontrado")
+    db.delete(contato)
     #perguntar pq eu dou um commit no final de cada metodo
     # Duas ótimas perguntas!
 
