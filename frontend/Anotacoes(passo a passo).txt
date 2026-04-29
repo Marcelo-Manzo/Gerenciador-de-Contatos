@@ -1,0 +1,9 @@
+comando para cria;áo do ambiente e React do front? npm create vite@latest . -- --template react
+
+instala;áo das dependencias: npm install npm run dev
+
+1. Instala o axios — biblioteca pra fazer requisições HTTP pra sua API: npm install axios
+
+2. Limpa os arquivos padrão do Vite: 
+2. Por que limpar o arquivo?
+O Vite cria um projeto de exemplo com aquela tela de "Get started" que você viu. Tem código que não vai usar — o contador, os logos, os links de documentação. A gente substitui por código do projeto real.
