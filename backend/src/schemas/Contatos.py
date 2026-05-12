@@ -4,7 +4,7 @@ from pydantic import BaseModel
 # É o que entra e sai pela API. O Pydantic usa isso pra validar e serializar os dados. Você pode ter schemas diferentes para a mesma entidade. 
 
 # O que o usuário manda pra criar (sem id)
-class Contato(BaseModel):
+class ContatoCreate(BaseModel):
     nome : str
     numero : str
     email : str
